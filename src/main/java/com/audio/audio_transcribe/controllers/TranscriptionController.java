@@ -3,8 +3,12 @@ package com.audio.audio_transcribe.controllers;
 import java.io.File;
 import java.io.IOException;
 
+import org.springframework.ai.audio.transcription.AudioTranscriptionPrompt;
+import org.springframework.ai.audio.transcription.AudioTranscriptionResponse;
 import org.springframework.ai.openai.OpenAiAudioTranscriptionModel;
 import org.springframework.ai.openai.OpenAiAudioTranscriptionOptions;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +33,12 @@ public class TranscriptionController {
         File tempFile = File.createTempFile("audio", ".wav");
         file.transferTo(tempFile);
 
-        FileSystem
+        FileSystemResource audioFile = new FileSystemResource(tempFile);
+        AudioTranscriptionPrompt prompt = new AudioTranscriptionPrompt(audioFile, this.options);
+
+        AudioTranscriptionResponse response = this.transcriptionModel.call(prompt);
+        
+        tempFile.delete();
+        return new ResponseEntity<>(response.getResult().getOutput(), HttpStatus.OK);
     }
 }
